@@ -7,6 +7,7 @@ const db=require('./db');
 
 const Person= require('./models/Person')
 
+//home 
 app.get('/',  (req,res)=> {
     res.send("swagat hai aapka , how can i help")   
 })
