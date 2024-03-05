@@ -1,42 +1,84 @@
 const mongoose = require('mongoose');
-
+const bcrypt=require('bcrypt');
 //person schema defining
 const personSchema= new mongoose.Schema(
     {
         name: {
             type: String,
-            required: true
+            required: true,
+           
         },
-        age: {
-            type: Number
+        email: {
+            type: String,
+            required: true,
+            unique: true
         },
+        password: {
+            required: true,
+            type: String
+        },
+
+
+        
         work: {
             type: String,
             enum: ['chef','waiter','manager'],
-            required:true
+           
         },
         mobile: {
             type: String
         },
-        email: {
-            type: String,
-            required:true,
-            unique:true
+        age: {
+            type: Number
         },
         address:{
             type: String,
         },
         salary:{
             type: Number,
-            required:true
-        }
+           // required:true
+        },
+        
 
     }
 );
+
+
+// bcrypt code block
+personSchema.pre('save', async function(next){
+    const person = this;
+
+    // Hash the password only if it has been modified (or is new)
+    if(!person.isModified('password')) return next();
+
+    try{
+        // hash password generation
+        const salt = await bcrypt.genSalt(10);
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(person.password, salt);
+        
+        // Override the plain password with the hashed one
+        person.password = hashedPassword;
+        next();
+    }catch(err){
+        return next(err);
+    }
+})
+
+personSchema.methods.comparePassword = async function(candidatePassword){
+    try{
+        // Use bcrypt to compare the provided password with the hashed password
+        const isMatch = await bcrypt.compare(candidatePassword, this.password);
+        return isMatch;
+    }catch(err){
+        throw err;
+    }
+}
 
 // create person mpdel 
 // I believe you can force the collection name to be whatever you’d like.
 // mongoose.model('Model name', schema, 'Collection name');
 
-const Person=mongoose.model('Person',personSchema, 'staff');
+const Person=mongoose.model('Person',personSchema);
 module.exports=Person;
